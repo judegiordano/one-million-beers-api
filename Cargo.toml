@@ -3,4 +3,14 @@ name = "one-million-beers-api"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+debug = 0
+incremental = false
+panic = "abort"
+opt-level = 3       # 0-3
+strip = 'symbols'   # strip symbols from binary
+lto = true          # enable link time optimization
+
 [dependencies]
+mongoose = "0.6.2"
+serde = { version = "1.0.229", features = ["derive"] }
