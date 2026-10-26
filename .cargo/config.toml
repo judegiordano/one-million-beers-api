@@ -1,4 +1,5 @@
 [alias]
+dev = "run --bin api"
 lint = """\
     clippy -- -W clippy::nursery \
     -W clippy::pedantic \
