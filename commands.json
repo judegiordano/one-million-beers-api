@@ -1,5 +1,9 @@
 [
     {
+        "name": "ping",
+        "description": "Responds with 'pong'."
+    },
+    {
         "name": "beer-down",
         "description": "Add another beer to the count."
     },
