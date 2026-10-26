@@ -1,0 +1,10 @@
+[
+    {
+        "name": "beer-down",
+        "description": "Add another beer to the count."
+    },
+    {
+        "name": "beer-count",
+        "description": "Show the current total of downed beers."
+    }
+]

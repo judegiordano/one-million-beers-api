@@ -12,7 +12,8 @@ pub mod env {
     pub struct Env {
         pub log_level: Level,
         pub mongo_uri: String,
-        pub discord_token: String,
+        pub discord_client_id: String,
+        pub discord_client_secret: String,
         pub discord_private_key: String,
     }
 
@@ -51,7 +52,8 @@ pub mod env {
             Ok(Self {
                 log_level: Self::log_level(),
                 mongo_uri: Self::_get_required_string("MONGO_URI")?,
-                discord_token: Self::_get_required_string("DISCORD_TOKEN")?,
+                discord_client_id: Self::_get_required_string("DISCORD_CLIENT_ID")?,
+                discord_client_secret: Self::_get_required_string("DISCORD_CLIENT_SECRET")?,
                 discord_private_key: Self::_get_required_string("DISCORD_PRIVATE_KEY")?,
             })
         }
