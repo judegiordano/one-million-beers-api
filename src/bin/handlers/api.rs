@@ -1,3 +1,4 @@
+use axum::extract::State;
 use one_million_beers_api::{
     controllers::routes,
     errors::AppError,
@@ -8,9 +9,9 @@ use one_million_beers_api::{
 #[tokio::main]
 pub async fn main() -> Result<(), lambda_http::Error> {
     logger::init()?;
-    let state = AppState {};
+    let state = AppState::new()?;
     let app = axum::Router::new()
-        .merge(routes())
+        .merge(routes(State(state.clone())))
         .fallback(axum::routing::any(|| async {
             ApiResponse::Err(AppError::NotFound("route not found".to_string()))
         }))

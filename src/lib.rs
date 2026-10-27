@@ -1,5 +1,6 @@
 pub mod controllers;
 pub mod errors;
+pub mod middleware;
 pub mod models;
 pub mod types;
 
@@ -14,7 +15,7 @@ pub mod env {
         pub mongo_uri: String,
         pub discord_client_id: String,
         pub discord_client_secret: String,
-        pub discord_private_key: String,
+        pub discord_public_key: String,
     }
 
     impl Env {
@@ -54,7 +55,7 @@ pub mod env {
                 mongo_uri: Self::_get_required_string("MONGO_URI")?,
                 discord_client_id: Self::_get_required_string("DISCORD_CLIENT_ID")?,
                 discord_client_secret: Self::_get_required_string("DISCORD_CLIENT_SECRET")?,
-                discord_private_key: Self::_get_required_string("DISCORD_PRIVATE_KEY")?,
+                discord_public_key: Self::_get_required_string("DISCORD_PUBLIC_KEY")?,
             })
         }
     }

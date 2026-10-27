@@ -18,7 +18,7 @@ async fn main() -> Result<(), AppError> {
 
     let url = format!("https://discord.com/api/v10/applications/{discord_client_id}/commands");
 
-    let cmd_buffer = std::fs::read("./commands.json").map_err(AppError::not_found)?;
+    let cmd_buffer = std::fs::read("./.data/commands.json").map_err(AppError::not_found)?;
     let data = serde_json::from_slice(&cmd_buffer).map_err(AppError::internal_server_error)?;
 
     let client = reqwest::Client::new();
