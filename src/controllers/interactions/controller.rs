@@ -29,7 +29,7 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
                 tokio::time::sleep(std::time::Duration::from_millis(250)).await;
                 if let Err(err) = interaction.handle_slash_command(request_client).await {
                     tracing::error!("{:#?}", err);
-                };
+                }
             });
             InteractionResponse {
                 response_type: 5, // defer

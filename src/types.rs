@@ -70,6 +70,7 @@ pub struct InteractionData {
     pub interaction_type: u64,
 }
 
+#[allow(clippy::unsafe_derive_deserialize)]
 #[derive(Debug, Deserialize)]
 pub struct Interaction {
     pub id: String,
@@ -121,7 +122,7 @@ impl Default for InteractionResponse {
     fn default() -> Self {
         Self {
             response_type: 4, // default for non PONG response
-            data: Default::default(),
+            data: Option::default(),
         }
     }
 }

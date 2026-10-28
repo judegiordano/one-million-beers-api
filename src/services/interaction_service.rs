@@ -17,8 +17,7 @@ impl Interaction {
         let token = &self.token;
 
         let followup_url = format!(
-            "https://discord.com/api/v10/webhooks/{}/{}/messages/@original",
-            application_id, token
+            "https://discord.com/api/v10/webhooks/{application_id}/{token}/messages/@original",
         );
 
         let body = json!({ "content": content });
@@ -42,23 +41,23 @@ impl Interaction {
         request_client: reqwest::Client,
     ) -> Result<(), AppError> {
         let content = match self.data.name.as_str() {
-            "ping" => self._ping().await?,
-            "beer-down" => self._beer_down().await?,
-            _ => self._unhandled().await?,
+            "ping" => Self::ping(),
+            "beer-down" => self.beer_down().await?,
+            _ => Self::unhandled(),
         };
         let _ = self.send_followup_message(request_client, content).await;
         Ok(())
     }
 
-    async fn _unhandled(&self) -> Result<String, AppError> {
-        Ok("WIP command".to_string())
+    fn unhandled() -> String {
+        "WIP command".to_string()
     }
 
-    async fn _ping(&self) -> Result<String, AppError> {
-        Ok("pong".to_string())
+    fn ping() -> String {
+        "pong".to_string()
     }
 
-    async fn _beer_down(&self) -> Result<String, AppError> {
+    async fn beer_down(&self) -> Result<String, AppError> {
         let server_id = &self.guild_id;
         let user_id = &self.member.user.id;
         let (user, server) = try_join!(
