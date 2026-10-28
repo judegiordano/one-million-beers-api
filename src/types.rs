@@ -1,5 +1,5 @@
 use ed25519_dalek::VerifyingKey;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{env::Env, errors::AppError};
 
@@ -70,7 +70,7 @@ pub struct InteractionData {
 pub struct Interaction {
     pub id: String,
     #[serde(rename = "type")]
-    pub interaction_type: u64,
+    pub interaction_type: InteractionType,
     pub guild_id: String,
     pub channel_id: String,
     pub channel: InteractionChannel,
@@ -79,6 +79,41 @@ pub struct Interaction {
     pub data: InteractionData,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(from = "u8")]
 pub enum InteractionType {
-    PING = 1,
+    Ping,
+    ApplicationCommand,
+    Unhandled(u8),
+}
+
+impl From<u8> for InteractionType {
+    fn from(v: u8) -> Self {
+        match v {
+            1 => Self::Ping,
+            2 => Self::ApplicationCommand,
+            n => Self::Unhandled(n),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Default)]
+pub struct InteractionResponseData {
+    pub content: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct InteractionResponse {
+    #[serde(rename = "type")]
+    pub response_type: u64,
+    pub data: Option<InteractionResponseData>,
+}
+
+impl Default for InteractionResponse {
+    fn default() -> Self {
+        Self {
+            response_type: 4, // default for non PONG response
+            data: Default::default(),
+        }
+    }
 }

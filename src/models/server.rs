@@ -1,4 +1,4 @@
-use mongoose::{DateTime, Model};
+use mongoose::{doc, types::MongooseError, DateTime, IndexModel, Model};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -22,3 +22,11 @@ impl Default for Server {
 }
 
 impl Model for Server {}
+
+impl Server {
+    pub async fn migrate() -> Result<Vec<String>, MongooseError> {
+        let indexes = [IndexModel::builder().keys(doc! { "server_id": 1 }).build()];
+        let result = Self::create_indexes(&indexes).await?;
+        Ok(result.index_names)
+    }
+}

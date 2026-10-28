@@ -34,3 +34,7 @@ path = "src/bin/handlers/api.rs"
 [[bin]]
 name = "register-slash-commands"
 path = "src/bin/scripts/register-slash-commands.rs"
+
+[[bin]]
+name = "migrate"
+path = "src/bin/scripts/migrate.rs"

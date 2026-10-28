@@ -1,9 +1,10 @@
 use axum::{body::Bytes, response::IntoResponse, Json};
-use serde_json::json;
 
 use crate::{
     errors::AppError,
-    types::{ApiResponse, Interaction},
+    types::{
+        ApiResponse, Interaction, InteractionResponse, InteractionResponseData, InteractionType,
+    },
 };
 
 pub async fn handle_interaction(body: Bytes) -> ApiResponse {
@@ -12,16 +13,28 @@ pub async fn handle_interaction(body: Bytes) -> ApiResponse {
 
     let response = match interaction.interaction_type {
         // type 1 is always discord ping
-        1 => json!({ "type": 1 }),
-        2 => {
+        InteractionType::Ping => InteractionResponse {
+            response_type: 1,
+            ..Default::default()
+        },
+        InteractionType::ApplicationCommand => {
             let name = interaction.data.name.as_str();
-            json!({
-                "type": 4,
-                "data": { "content": format!("You ran /{name}") }
-            })
+            // handle slash commands
+            let content = match name {
+                "ping" => "pong".to_string(),
+                _ => format!("/{name} is a WIP"),
+            };
+            InteractionResponse {
+                data: Some(InteractionResponseData { content }),
+                ..Default::default()
+            }
         }
-
-        _ => json!({ "type": 4, "data": { "content": "Unsupported interaction" } }),
+        InteractionType::Unhandled(_) => InteractionResponse {
+            data: Some(InteractionResponseData {
+                content: "Unsupported interaction".to_string(),
+            }),
+            ..Default::default()
+        },
     };
 
     Ok(Json(response).into_response())
