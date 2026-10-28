@@ -2,6 +2,7 @@ pub mod controllers;
 pub mod errors;
 pub mod middleware;
 pub mod models;
+pub mod services;
 pub mod types;
 
 pub mod env {

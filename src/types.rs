@@ -8,6 +8,7 @@ pub type ApiResponse = Result<axum::response::Response, AppError>;
 #[derive(Clone, Debug)]
 pub struct AppState {
     pub verification_key: VerifyingKey,
+    pub request_client: reqwest::Client,
 }
 
 impl AppState {
@@ -31,7 +32,10 @@ impl AppState {
             Ok(key) => key,
             Err(err) => return Err(AppError::InternalServerError(err.to_string())),
         };
-        Ok(Self { verification_key })
+        Ok(Self {
+            verification_key,
+            request_client: reqwest::Client::new(),
+        })
     }
 }
 
@@ -69,6 +73,7 @@ pub struct InteractionData {
 #[derive(Debug, Deserialize)]
 pub struct Interaction {
     pub id: String,
+    pub application_id: String,
     #[serde(rename = "type")]
     pub interaction_type: InteractionType,
     pub guild_id: String,
@@ -104,6 +109,9 @@ pub struct InteractionResponseData {
 
 #[derive(Debug, Serialize)]
 pub struct InteractionResponse {
+    // 1 -> ping
+    // 4 -> slash command
+    // 5 -> deferred
     #[serde(rename = "type")]
     pub response_type: u64,
     pub data: Option<InteractionResponseData>,

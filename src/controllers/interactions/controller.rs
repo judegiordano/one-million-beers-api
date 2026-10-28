@@ -1,15 +1,21 @@
-use axum::{body::Bytes, response::IntoResponse, Json};
+use axum::{body::Bytes, extract::State, response::IntoResponse, Json};
 
 use crate::{
     errors::AppError,
     types::{
-        ApiResponse, Interaction, InteractionResponse, InteractionResponseData, InteractionType,
+        ApiResponse, AppState, Interaction, InteractionResponse, InteractionResponseData,
+        InteractionType,
     },
 };
 
-pub async fn handle_interaction(body: Bytes) -> ApiResponse {
+pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> ApiResponse {
+    if cfg!(debug_assertions) {
+        let raw_interaction: serde_json::Value =
+            serde_json::from_slice(&body).map_err(AppError::bad_request)?;
+        tracing::info!("{:#?}", raw_interaction);
+    }
+    let request_client = state.request_client;
     let interaction: Interaction = serde_json::from_slice(&body).map_err(AppError::bad_request)?;
-    tracing::info!("{:#?}", interaction);
 
     let response = match interaction.interaction_type {
         // type 1 is always discord ping
@@ -18,14 +24,15 @@ pub async fn handle_interaction(body: Bytes) -> ApiResponse {
             ..Default::default()
         },
         InteractionType::ApplicationCommand => {
-            let name = interaction.data.name.as_str();
             // handle slash commands
-            let content = match name {
-                "ping" => "pong".to_string(),
-                _ => format!("/{name} is a WIP"),
-            };
+            tokio::spawn(async move {
+                tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                if let Err(err) = interaction.handle_slash_command(request_client).await {
+                    tracing::error!("{:#?}", err);
+                };
+            });
             InteractionResponse {
-                data: Some(InteractionResponseData { content }),
+                response_type: 5, // defer
                 ..Default::default()
             }
         }
