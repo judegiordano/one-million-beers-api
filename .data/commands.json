@@ -9,6 +9,10 @@
     },
     {
         "name": "beer-count",
-        "description": "Show the current total of downed beers."
+        "description": "Show the current total of downed server beers."
+    },
+    {
+        "name": "beer-tab",
+        "description": "Show the current total of your downed beers."
     }
 ]

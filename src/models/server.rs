@@ -16,7 +16,7 @@ impl Default for Server {
         Self {
             id: Self::generate_nanoid(),
             server_id: String::default(),
-            server_total: 1,
+            server_total: 0,
             created_at: DateTime::now(),
             updated_at: DateTime::now(),
         }
@@ -60,9 +60,15 @@ impl Server {
             return Ok(exists);
         }
         let new_server = Self {
+            server_total: 1,
             server_id: server_id.to_string(),
             ..Default::default()
         };
         new_server.save().await
+    }
+
+    pub async fn beer_count(server_id: &str) -> Result<u64, MongooseError> {
+        let server = Self::find_or_create(server_id).await?;
+        Ok(server.server_total)
     }
 }

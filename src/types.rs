@@ -106,6 +106,7 @@ impl From<u8> for InteractionType {
 #[derive(Debug, Serialize, Default)]
 pub struct InteractionResponseData {
     pub content: String,
+    pub flags: Option<u64>,
 }
 
 #[derive(Debug, Serialize)]

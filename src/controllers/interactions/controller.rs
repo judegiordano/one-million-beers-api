@@ -28,21 +28,34 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
             tokio::spawn(async move {
                 tokio::time::sleep(std::time::Duration::from_millis(250)).await;
                 if let Err(err) = interaction.handle_slash_command(request_client).await {
-                    tracing::error!("{:#?}", err);
+                    tracing::error!(
+                        "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
+                        interaction.data.name,
+                        interaction.member.user.id,
+                        err
+                    );
                 }
             });
             InteractionResponse {
                 response_type: 5, // defer
+                data: Some(InteractionResponseData {
+                    flags: Some(1 << 6), // 64 ephemeral message
+                    ..Default::default()
+                }),
                 ..Default::default()
             }
         }
         InteractionType::Unhandled(_) => InteractionResponse {
             data: Some(InteractionResponseData {
                 content: "Unsupported interaction".to_string(),
+                ..Default::default()
             }),
             ..Default::default()
         },
     };
 
+    if cfg!(debug_assertions) {
+        tracing::info!("[RESPONSE] {:#?}", response);
+    }
     Ok(Json(response).into_response())
 }

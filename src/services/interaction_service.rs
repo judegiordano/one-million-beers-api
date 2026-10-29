@@ -43,6 +43,8 @@ impl Interaction {
         let content = match self.data.name.as_str() {
             "ping" => Self::ping(),
             "beer-down" => self.beer_down().await?,
+            "beer-count" => self.beer_count().await?,
+            "beer-tab" => self.beer_tab().await?,
             _ => Self::unhandled(),
         };
         let _ = self.send_followup_message(request_client, content).await;
@@ -60,14 +62,31 @@ impl Interaction {
     async fn beer_down(&self) -> Result<String, AppError> {
         let server_id = &self.guild_id;
         let user_id = &self.member.user.id;
-        let (user, server) = try_join!(
+        let (_, server) = try_join!(
             User::increment_user_total(server_id, user_id),
             Server::increment_server_total(server_id)
         )
         .map_err(AppError::bad_request)?;
         Ok(format!(
-            "{} beer(s) down! Server is at {} 🍻.",
-            user.server_total, server.server_total
+            "Beer down! Server is at {} 🍻.",
+            server.server_total
         ))
+    }
+
+    async fn beer_count(&self) -> Result<String, AppError> {
+        let server_id = &self.guild_id;
+        let count = Server::beer_count(server_id)
+            .await
+            .map_err(AppError::bad_request)?;
+        Ok(format!("Server is at {count} beers 🍻.",))
+    }
+
+    async fn beer_tab(&self) -> Result<String, AppError> {
+        let server_id = &self.guild_id;
+        let user_id = &self.member.user.id;
+        let count = User::beer_count(server_id, user_id)
+            .await
+            .map_err(AppError::bad_request)?;
+        Ok(format!("You have downed {count} beers 🍻.",))
     }
 }
