@@ -9,6 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "packageManager": "pnpm@12.16.1",
   "dependencies": {
     "sst": "4.17.2"
   },
