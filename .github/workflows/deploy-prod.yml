@@ -85,7 +85,7 @@ jobs:
         working-directory: .iac
         run: |
           set -euxo pipefail
-          pnpm sst deploy --stage prod
+          pnpm sst deploy --stage prod --print-logs
 
     env:
       STAGE: prod
