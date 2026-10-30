@@ -79,13 +79,16 @@ jobs:
       - name: build lambdas
         run: |
           set -euxo pipefail
-          cargo lambda build --release --arm64
+          cargo lambda build --release --arm64 --bin api
 
-      - name: sst deploy
-        working-directory: .iac
-        run: |
-          set -euxo pipefail
-          pnpm sst deploy --stage prod --print-logs
+      - name: verify lambda bundle
+        run: ls -la target/lambda/api
+
+      # - name: sst deploy
+      #   working-directory: .iac
+      #   run: |
+      #     set -euxo pipefail
+      #     pnpm sst deploy --stage prod --print-logs
 
     env:
       STAGE: prod
