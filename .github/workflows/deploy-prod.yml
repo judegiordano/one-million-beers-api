@@ -19,9 +19,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: latest
+          node-version: 22
 
       - name: use pnpm
         uses: pnpm/action-setup@v4
@@ -34,7 +34,7 @@ jobs:
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
 
       - name: setup pnpm cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ${{ env.STORE_PATH }}
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -65,7 +65,7 @@ jobs:
       - name: build lambdas
         run: |
           set -euxo pipefail
-          cargo lambda build --release --bin api
+          cargo lambda build --release --arm64 --bin api
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -76,9 +76,20 @@ jobs:
           pnpm sst install
 
       - name: sst deploy
+        timeout-minutes: 30
         run: |
           set -euxo pipefail
           pnpm sst deploy --stage prod --print-logs
+
+      - name: upload sst logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: sst-logs
+          path: |
+            .sst/log/
+            .sst/pulumi/*/eventlog.json
+          if-no-files-found: warn
 
     env:
       STAGE: prod
