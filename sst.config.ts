@@ -28,7 +28,7 @@ export default $config({
     const lambda = new sst.aws.Function('OneMillionBeersApi', {
       runtime: 'rust',
       handler: 'bootstrap',
-      bundle: '../target/lambda/api',
+      bundle: 'target/lambda/api',
       memory: '1024 MB',
       timeout: '2 minutes',
       architecture: 'arm64',
