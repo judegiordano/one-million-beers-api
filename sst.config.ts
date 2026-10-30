@@ -28,7 +28,7 @@ export default $config({
     const lambda = new sst.aws.Function('OneMillionBeersApi', {
       runtime: 'rust',
       handler: 'bootstrap',
-      bundle: '../target/lambda/api',
+      bundle: 'target/lambda/api',
       memory: '1024 MB',
       timeout: '2 minutes',
       architecture: 'arm64',
@@ -37,18 +37,18 @@ export default $config({
       environment,
     });
 
-    // const router = new sst.aws.Router('OneMillionBeersRouter', {
-    //   routes: { '/*': lambda.url },
-    //   domain: {
-    //     name: `api.one-million-beers.${domain}`,
-    //     dns: sst.aws.dns(),
-    //     redirects: [`www.api.one-million-beers.${domain}`]
-    //   }
-    // })
+    const router = new sst.aws.Router('OneMillionBeersRouter', {
+      routes: { '/*': lambda.url },
+      domain: {
+        name: `api.one-million-beers.${domain}`,
+        dns: sst.aws.dns(),
+        redirects: [`www.api.one-million-beers.${domain}`]
+      }
+    })
 
     return {
       function: lambda.url,
-      // url: router.url,
+      url: router.url,
     }
   },
 });

@@ -13,7 +13,7 @@ concurrency:
 jobs:
   deploy-prod:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -27,7 +27,7 @@ jobs:
       - name: use pnpm
         uses: pnpm/action-setup@v4
         with:
-          package_json_file: .iac/package.json
+          package_json_file: package.json
 
       - name: get pnpm store directory
         shell: bash
@@ -64,11 +64,9 @@ jobs:
           arch: aarch64 # | x86_64
 
       - name: pnpm install
-        working-directory: .iac
         run: pnpm install --frozen-lockfile
 
       - name: sst install providers
-        working-directory: .iac
         run: |
           set -euxo pipefail
           pnpm sst install
@@ -79,7 +77,6 @@ jobs:
           cargo lambda build --release --arm64 --bin api
 
       - name: sst deploy
-        working-directory: .iac
         run: |
           set -euxo pipefail
           pnpm sst deploy --stage prod --print-logs

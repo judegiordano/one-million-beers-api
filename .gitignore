@@ -1,4 +1,6 @@
 /target
 .env
 
-.iac/node_modules
+# sst
+node_modules
+.sst
