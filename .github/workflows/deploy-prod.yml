@@ -27,7 +27,7 @@ jobs:
       - name: use pnpm
         uses: pnpm/action-setup@v4
         with:
-          package_json_file: package.json
+          package_json_file: .iac/package.json
 
       - name: get pnpm store directory
         shell: bash
