@@ -42,6 +42,7 @@ export default $config({
       routes: { '/*': lambda.url },
       domain: {
         name: `api.one-million-beers.${domain}`,
+        dns: sst.aws.dns(),
         redirects: [`www.api.one-million-beers.${domain}`]
       }
     })
