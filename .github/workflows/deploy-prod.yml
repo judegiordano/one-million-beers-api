@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy-prod:
@@ -17,7 +17,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pguyot/arm-runner-action@v2
 
       - name: use Node.js
         uses: actions/setup-node@v3
@@ -61,12 +60,12 @@ jobs:
         with:
           repo: cargo-lambda/cargo-lambda
           platform: linux
-          arch: aarch64 # | x86_64
+          arch: x86_64
 
       - name: build lambdas
         run: |
           set -euxo pipefail
-          cargo lambda build --release --arm64 --bin api
+          cargo lambda build --release --bin api
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile
@@ -79,7 +78,7 @@ jobs:
       - name: sst deploy
         run: |
           set -euxo pipefail
-          pnpm sst deploy --stage prod
+          pnpm sst deploy --stage prod --print-logs
 
     env:
       STAGE: prod
