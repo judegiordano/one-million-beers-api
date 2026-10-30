@@ -63,23 +63,26 @@ jobs:
           platform: linux
           arch: aarch64 # | x86_64
 
-      - name: pnpm install
-        run: pnpm install --frozen-lockfile
-
-      - name: sst install providers
-        run: |
-          set -euxo pipefail
-          pnpm sst install
-
       - name: build lambdas
         run: |
           set -euxo pipefail
           cargo lambda build --release --arm64 --bin api
 
-      - name: sst deploy
+      - name: pnpm install
+        working-directory: .iac
+        run: pnpm install --frozen-lockfile
+
+      - name: sst install providers
+        working-directory: .iac
         run: |
           set -euxo pipefail
-          pnpm sst deploy --stage prod --print-logs
+          pnpm sst install
+
+      - name: sst deploy
+        working-directory: .iac
+        run: |
+          set -euxo pipefail
+          pnpm sst deploy --stage prod
 
     env:
       STAGE: prod
