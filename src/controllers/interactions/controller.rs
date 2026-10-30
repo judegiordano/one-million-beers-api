@@ -9,12 +9,13 @@ use crate::{
 };
 
 pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> ApiResponse {
-    if cfg!(debug_assertions) {
+    {
         let raw_interaction: serde_json::Value =
             serde_json::from_slice(&body).map_err(AppError::bad_request)?;
-        tracing::info!("{:#?}", raw_interaction);
+        tracing::info!("[INTERACTION] {:#?}", raw_interaction);
     }
     let request_client = state.request_client;
+    // TODO: this can error on the ping, make fields optional
     let interaction: Interaction = serde_json::from_slice(&body).map_err(AppError::bad_request)?;
 
     let response = match interaction.interaction_type {
