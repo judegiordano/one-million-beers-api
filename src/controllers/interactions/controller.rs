@@ -1,22 +1,14 @@
 use axum::{body::Bytes, extract::State, response::IntoResponse, Json};
 
-use crate::{
-    errors::AppError,
-    types::{
-        ApiResponse, AppState, Interaction, InteractionResponse, InteractionResponseData,
-        InteractionType,
-    },
+use crate::types::{
+    ApiResponse, AppState, Interaction, InteractionResponse, InteractionResponseData,
+    InteractionType,
 };
 
 pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> ApiResponse {
-    {
-        let raw_interaction: serde_json::Value =
-            serde_json::from_slice(&body).map_err(AppError::bad_request)?;
-        tracing::info!("[INTERACTION] {:#?}", raw_interaction);
-    }
     let request_client = state.request_client;
-    // TODO: this can error on the ping, make fields optional
-    let interaction: Interaction = serde_json::from_slice(&body).map_err(AppError::bad_request)?;
+    let interaction: Interaction = serde_json::from_slice(&body).unwrap_or_default();
+    tracing::info!("[INTERACTION] {:?}", interaction);
 
     let response = match interaction.interaction_type {
         // type 1 is always discord ping

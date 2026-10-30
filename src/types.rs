@@ -39,7 +39,7 @@ impl AppState {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct InteractionChannel {
     pub id: String,
     pub name: String,
@@ -49,20 +49,20 @@ pub struct InteractionChannel {
     pub interaction_type: u64,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct User {
     pub id: String,
     pub global_name: String,
     pub username: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct GuildMember {
     pub roles: Vec<String>,
     pub user: User,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct InteractionData {
     pub id: String,
     pub name: String,
@@ -71,7 +71,7 @@ pub struct InteractionData {
 }
 
 #[allow(clippy::unsafe_derive_deserialize)]
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Interaction {
     pub id: String,
     pub application_id: String,
@@ -91,6 +91,12 @@ pub enum InteractionType {
     Ping,
     ApplicationCommand,
     Unhandled(u8),
+}
+
+impl Default for InteractionType {
+    fn default() -> Self {
+        Self::Ping
+    }
 }
 
 impl From<u8> for InteractionType {
