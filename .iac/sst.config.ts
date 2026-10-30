@@ -24,7 +24,6 @@ export default $config({
       DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET!,
       DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY!,
     }
-    const tags = ["one-million-beers", stage]
 
     const lambda = new sst.aws.Function('OneMillionBeersApi', {
       runtime: 'rust',
@@ -38,18 +37,18 @@ export default $config({
       environment,
     });
 
-    const router = new sst.aws.Router('OneMillionBeersRouter', {
-      routes: { '/*': lambda.url },
-      domain: {
-        name: `api.one-million-beers.${domain}`,
-        dns: sst.aws.dns(),
-        redirects: [`www.api.one-million-beers.${domain}`]
-      }
-    })
+    // const router = new sst.aws.Router('OneMillionBeersRouter', {
+    //   routes: { '/*': lambda.url },
+    //   domain: {
+    //     name: `api.one-million-beers.${domain}`,
+    //     dns: sst.aws.dns(),
+    //     redirects: [`www.api.one-million-beers.${domain}`]
+    //   }
+    // })
 
     return {
       function: lambda.url,
-      url: router.url,
+      // url: router.url,
     }
   },
 });

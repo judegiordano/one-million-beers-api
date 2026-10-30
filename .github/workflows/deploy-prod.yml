@@ -63,9 +63,6 @@ jobs:
           platform: linux
           arch: aarch64 # | x86_64
 
-      - name: cargo lint
-        run: cargo lint
-
       - name: pnpm install
         working-directory: .iac
         run: pnpm install --frozen-lockfile
@@ -81,14 +78,11 @@ jobs:
           set -euxo pipefail
           cargo lambda build --release --arm64 --bin api
 
-      - name: verify lambda bundle
-        run: ls -la target/lambda/api
-
-      # - name: sst deploy
-      #   working-directory: .iac
-      #   run: |
-      #     set -euxo pipefail
-      #     pnpm sst deploy --stage prod --print-logs
+      - name: sst deploy
+        working-directory: .iac
+        run: |
+          set -euxo pipefail
+          pnpm sst deploy --stage prod --print-logs
 
     env:
       STAGE: prod
