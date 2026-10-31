@@ -78,7 +78,7 @@ impl Interaction {
         let count = Server::beer_count(server_id)
             .await
             .map_err(AppError::bad_request)?;
-        Ok(format!("Server is at {count} beers 🍻.",))
+        Ok(format!("Server is at {count} beers 🍻."))
     }
 
     async fn beer_tab(&self) -> Result<String, AppError> {
@@ -87,6 +87,6 @@ impl Interaction {
         let count = User::beer_count(server_id, user_id)
             .await
             .map_err(AppError::bad_request)?;
-        Ok(format!("You have downed {count} beers 🍻.",))
+        Ok(format!("You have downed {count} beers 🍻."))
     }
 }

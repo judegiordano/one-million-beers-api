@@ -7,6 +7,7 @@ pub type ApiResponse = Result<axum::response::Response, AppError>;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
+    pub env: Env,
     pub verification_key: VerifyingKey,
     pub request_client: reqwest::Client,
     pub sdk_lambda_client: aws_sdk_lambda::Client,
@@ -14,11 +15,9 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new() -> Result<Self, AppError> {
-        let Env {
-            discord_public_key, ..
-        } = Env::load()?;
+        let env = Env::load()?;
         // discord verification key
-        let public_key = match hex::decode(discord_public_key) {
+        let public_key = match hex::decode(env.discord_public_key.clone()) {
             Ok(key) => key,
             Err(err) => return Err(AppError::InternalServerError(err.to_string())),
         };
@@ -38,6 +37,7 @@ impl AppState {
         let config = aws_config::load_from_env().await;
 
         Ok(Self {
+            env,
             verification_key,
             request_client: reqwest::Client::new(),
             sdk_lambda_client: aws_sdk_lambda::Client::new(&config),
@@ -91,18 +91,13 @@ pub struct Interaction {
     pub data: InteractionData,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
 #[serde(from = "u8")]
 pub enum InteractionType {
+    #[default]
     Ping,
     ApplicationCommand,
     Unhandled(u8),
-}
-
-impl Default for InteractionType {
-    fn default() -> Self {
-        Self::Ping
-    }
 }
 
 impl From<u8> for InteractionType {

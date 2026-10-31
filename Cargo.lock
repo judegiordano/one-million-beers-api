@@ -2126,6 +2126,7 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "lambda_http",
+ "lambda_runtime",
  "mongoose",
  "reqwest",
  "serde",
