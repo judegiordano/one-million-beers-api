@@ -25,6 +25,16 @@ export default $config({
       DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY!,
     }
 
+    const worker = new sst.aws.Function('OmbWorker', {
+      runtime: 'rust',
+      handler: 'bootstrap',
+      bundle: 'target/lambda/worker',
+      memory: '1024 MB',
+      timeout: '5 minutes',
+      architecture: 'arm64',
+      environment,
+    });
+
     const lambda = new sst.aws.Function('OneMillionBeersApi', {
       runtime: 'rust',
       handler: 'bootstrap',
@@ -33,8 +43,14 @@ export default $config({
       timeout: '2 minutes',
       architecture: 'arm64',
       url: { cors: { allowCredentials: true } },
-      logging: { retention: '1 week', format: 'json' },
-      environment,
+      logging: { retention: '1 week' },
+      environment: {
+        ...environment,
+        WORKER_FUNCTION_NAME: worker.name
+      },
+      permissions: [
+        { actions: ['lambda:InvokeFunction'], resources: [worker.arn] },
+      ],
     });
 
     const router = new sst.aws.Router('OmbRouter', {

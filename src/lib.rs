@@ -17,6 +17,8 @@ pub mod env {
         pub discord_client_id: String,
         pub discord_client_secret: String,
         pub discord_public_key: String,
+        // loaded through sst
+        pub worker_function_name: String,
     }
 
     impl Env {
@@ -57,6 +59,7 @@ pub mod env {
                 discord_client_id: Self::_get_required_string("DISCORD_CLIENT_ID")?,
                 discord_client_secret: Self::_get_required_string("DISCORD_CLIENT_SECRET")?,
                 discord_public_key: Self::_get_required_string("DISCORD_PUBLIC_KEY")?,
+                worker_function_name: Self::_get_required_string("WORKER_FUNCTION_NAME")?,
             })
         }
     }

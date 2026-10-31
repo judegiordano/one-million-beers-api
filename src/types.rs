@@ -9,13 +9,15 @@ pub type ApiResponse = Result<axum::response::Response, AppError>;
 pub struct AppState {
     pub verification_key: VerifyingKey,
     pub request_client: reqwest::Client,
+    pub sdk_lambda_client: aws_sdk_lambda::Client,
 }
 
 impl AppState {
-    pub fn new() -> Result<Self, AppError> {
+    pub async fn new() -> Result<Self, AppError> {
         let Env {
             discord_public_key, ..
         } = Env::load()?;
+        // discord verification key
         let public_key = match hex::decode(discord_public_key) {
             Ok(key) => key,
             Err(err) => return Err(AppError::InternalServerError(err.to_string())),
@@ -32,9 +34,13 @@ impl AppState {
             Ok(key) => key,
             Err(err) => return Err(AppError::InternalServerError(err.to_string())),
         };
+        // lambda sdk
+        let config = aws_config::load_from_env().await;
+
         Ok(Self {
             verification_key,
             request_client: reqwest::Client::new(),
+            sdk_lambda_client: aws_sdk_lambda::Client::new(&config),
         })
     }
 }

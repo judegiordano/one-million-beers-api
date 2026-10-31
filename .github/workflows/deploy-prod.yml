@@ -66,6 +66,7 @@ jobs:
         run: |
           set -euxo pipefail
           cargo lambda build --release --arm64 --bin api
+          cargo lambda build --release --arm64 --bin worker
 
       - name: pnpm install
         run: pnpm install --frozen-lockfile

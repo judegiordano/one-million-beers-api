@@ -12,6 +12,8 @@ strip = 'symbols'   # strip symbols from binary
 lto = true          # enable link time optimization
 
 [dependencies]
+aws-config = { version = "1.13.0", features = ["behavior-version-latest"] }
+aws-sdk-lambda = "1.156.0"
 axum = "0.8.9"
 dotenv = "0.15.0"
 ed25519-dalek = "3.0.0"
@@ -30,6 +32,10 @@ tracing-subscriber = "0.3.23"
 [[bin]]
 name = "api"
 path = "src/bin/handlers/api.rs"
+
+[[bin]]
+name = "worker"
+path = "src/bin/handlers/worker.rs"
 
 [[bin]]
 name = "register-slash-commands"

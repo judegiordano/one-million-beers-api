@@ -9,7 +9,7 @@ use one_million_beers_api::{
 #[tokio::main]
 pub async fn main() -> Result<(), lambda_http::Error> {
     logger::init()?;
-    let state = AppState::new()?;
+    let state = AppState::new().await?;
     let app = axum::Router::new()
         .merge(routes(State(state.clone())))
         .fallback(axum::routing::any(|| async {
