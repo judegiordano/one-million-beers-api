@@ -4,6 +4,7 @@ use tokio::try_join;
 use crate::{
     errors::AppError,
     models::{server::Server, user::User},
+    services::command::{Command, CommandHelper},
     types::Interaction,
 };
 
@@ -40,21 +41,21 @@ impl Interaction {
         &self,
         request_client: reqwest::Client,
     ) -> Result<(), AppError> {
-        let content = match self.data.name.as_str() {
-            "ping" => Self::ping(),
-            "help" => Self::help(),
-            "beer-down" => self.beer_down().await?,
-            "beer-count" => self.beer_count().await?,
-            "beer-tab" => self.beer_tab().await?,
-            _ => Self::unhandled(),
+        let content = match self.data.name.command_from_str() {
+            Command::Ping => Self::ping(),
+            Command::Help => Self::help(),
+            Command::BeerDown => self.beer_down().await?,
+            Command::BeerCount => self.beer_count().await?,
+            Command::BeerTab => self.beer_tab().await?,
+            Command::Unhandled => Self::unhandled(),
         };
         let _ = self.send_followup_message(request_client, content).await;
         Ok(())
     }
 
     pub fn build_flags(&self) -> Option<u64> {
-        match self.data.name.as_str() {
-            "help" => None,
+        match self.data.name.command_from_str() {
+            Command::Help => None,
             _ => Some(1 << 6), // 64 ephemeral message
         }
     }
@@ -68,7 +69,15 @@ impl Interaction {
     }
 
     fn help() -> String {
-        "help".to_string()
+        let commands = Command::variants();
+        let commands_iter = commands.iter().map(|cmd| {
+            let name = cmd.to_string();
+            let description = cmd.description();
+            format!("`/{name}` - {description}")
+        });
+        let content_iter = commands_iter.collect::<Vec<String>>();
+        let content = content_iter.join("\n");
+        format!("**Available Commands**\n\n{content}")
     }
 
     async fn beer_down(&self) -> Result<String, AppError> {

@@ -18,7 +18,20 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
             ..Default::default()
         },
         InteractionType::ApplicationCommand => {
-            if !cfg!(debug_assertions) {
+            if cfg!(debug_assertions) {
+                // locally, spawn task
+                tokio::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                    if let Err(err) = interaction.handle_slash_command(state.request_client).await {
+                        tracing::error!(
+                            "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
+                            interaction.data.name,
+                            interaction.member.user.id,
+                            err
+                        );
+                    }
+                });
+            } else {
                 // in release, invoke worker lambda
                 let function = state.env.worker_function_name;
                 let lambda = state.sdk_lambda_client.invoke();
@@ -39,19 +52,6 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
                     })
                     .into_response());
                 }
-            } else {
-                // locally, spawn task
-                tokio::spawn(async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-                    if let Err(err) = interaction.handle_slash_command(state.request_client).await {
-                        tracing::error!(
-                            "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
-                            interaction.data.name,
-                            interaction.member.user.id,
-                            err
-                        );
-                    }
-                });
             }
 
             InteractionResponse {
