@@ -12,7 +12,7 @@ async fn main() -> Result<(), AppError> {
     logger::init()?;
     let Env {
         discord_client_id,
-        discord_client_secret,
+        discord_token,
         ..
     } = Env::load()?;
 
@@ -25,7 +25,7 @@ async fn main() -> Result<(), AppError> {
 
     let res = client
         .put(&url)
-        .header("Authorization", format!("Bot {discord_client_secret}"))
+        .header("Authorization", format!("Bot {discord_token}"))
         .json::<Vec<SlashCommand>>(&data)
         .send()
         .await

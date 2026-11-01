@@ -21,7 +21,7 @@ export default $config({
       LOG_LEVEL: process.env.LOG_LEVEL!,
       MONGO_URI: process.env.MONGO_URI!,
       DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID!,
-      DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET!,
+      DISCORD_TOKEN: process.env.DISCORD_TOKEN!,
       DISCORD_PUBLIC_KEY: process.env.DISCORD_PUBLIC_KEY!,
     }
 
