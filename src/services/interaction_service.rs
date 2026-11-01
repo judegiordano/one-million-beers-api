@@ -38,7 +38,6 @@ impl Interaction {
             "content": content,
             "components": components
         });
-        println!("[BODY]: {:?}", body);
 
         let req = request_client.patch(followup_url).json(&body);
         let res = req.send().await?;

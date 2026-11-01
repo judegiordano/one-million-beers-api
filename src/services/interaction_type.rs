@@ -42,15 +42,15 @@ impl InteractionType {
         body: Bytes,
     ) -> Result<InteractionResponse, AppError> {
         let response = match self {
-            InteractionType::Ping => Self::ping(),
-            InteractionType::ApplicationCommand => Self::application_command(state, body).await?,
-            InteractionType::MessageComponent => Self::message_component(body)?,
-            InteractionType::Unhandled(_) => Self::unhandled(),
+            Self::Ping => Self::ping(),
+            Self::ApplicationCommand => Self::application_command(state, &body).await?,
+            Self::MessageComponent => Self::message_component(&body)?,
+            Self::Unhandled(_) => Self::unhandled(),
         };
         Ok(response)
     }
 
-    fn ping() -> InteractionResponse {
+    const fn ping() -> InteractionResponse {
         InteractionResponse {
             response_type: 1,
             data: None,
@@ -63,17 +63,15 @@ impl InteractionType {
             data: Some(InteractionResponseData {
                 content: "Unsupported interaction".to_string(),
                 flags: Some(1 << 6),
-                ..Default::default()
             }),
-            ..Default::default()
         }
     }
 
     async fn application_command(
         state: AppState,
-        body: Bytes,
+        body: &Bytes,
     ) -> Result<InteractionResponse, AppError> {
-        let interaction: Interaction = serde_json::from_slice(&body).map_err(|err| {
+        let interaction: Interaction = serde_json::from_slice(body).map_err(|err| {
             tracing::error!("[PARSE ERROR] {err}");
             AppError::bad_request(err)
         })?;
@@ -124,9 +122,9 @@ impl InteractionType {
         })
     }
 
-    fn message_component(body: Bytes) -> Result<InteractionResponse, AppError> {
+    fn message_component(body: &Bytes) -> Result<InteractionResponse, AppError> {
         let interaction: MessageComponentInteraction =
-            serde_json::from_slice(&body).map_err(|err| {
+            serde_json::from_slice(body).map_err(|err| {
                 tracing::error!("[PARSE ERROR] {err}");
                 AppError::bad_request(err)
             })?;
