@@ -80,7 +80,7 @@ impl Interaction {
             acc
         });
         let content = commands_iter.join("\n");
-        let title = "🍻**Get the Server to One Million Beers!**🍻".to_string();
+        let title = "🍻 **Get the Server to One Million Beers!** 🍻".to_string();
         format!("{title}\n\n**Available Commands**\n\n{content}")
     }
 
