@@ -77,7 +77,8 @@ impl Interaction {
         });
         let content_iter = commands_iter.collect::<Vec<String>>();
         let content = content_iter.join("\n");
-        format!("**Available Commands**\n\n{content}")
+        let title = "**Get the Server to One Million Beers!**".to_string();
+        format!("{title}\n\n**Available Commands**\n\n{content}")
     }
 
     async fn beer_down(&self) -> Result<String, AppError> {
