@@ -70,14 +70,17 @@ impl Interaction {
 
     fn help() -> String {
         let commands = Command::variants();
-        let commands_iter = commands.iter().map(|cmd| {
+        let commands_iter = commands.iter().fold(Vec::new(), |mut acc, cmd| {
+            if *cmd == Command::Unhandled {
+                return acc;
+            }
             let name = cmd.to_string();
             let description = cmd.description();
-            format!("`/{name}` - {description}")
+            acc.push(format!("`/{name}` - {description}"));
+            acc
         });
-        let content_iter = commands_iter.collect::<Vec<String>>();
-        let content = content_iter.join("\n");
-        let title = "**Get the Server to One Million Beers!**".to_string();
+        let content = commands_iter.join("\n");
+        let title = "🍻**Get the Server to One Million Beers!**🍻".to_string();
         format!("{title}\n\n**Available Commands**\n\n{content}")
     }
 
