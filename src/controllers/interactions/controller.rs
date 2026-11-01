@@ -9,6 +9,7 @@ use crate::types::{
 pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> ApiResponse {
     let interaction: Interaction = serde_json::from_slice(&body).unwrap_or_default();
     tracing::info!("[INTERACTION] {:?}", interaction);
+    let flags = interaction.build_flags();
 
     let response = match interaction.interaction_type {
         // type 1 is always discord ping
@@ -17,34 +18,46 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
             ..Default::default()
         },
         InteractionType::ApplicationCommand => {
-            // tokio::spawn(async move {
-            //     tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-            //     if let Err(err) = interaction.handle_slash_command(request_client).await {
-            //         tracing::error!(
-            //             "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
-            //             interaction.data.name,
-            //             interaction.member.user.id,
-            //             err
-            //         );
-            //     }
-            // });
-            // handle slash commands
-            let function = state.env.worker_function_name;
-            let lambda = state.sdk_lambda_client.invoke();
-            if let Err(err) = lambda
-                .function_name(function)
-                .invocation_type(InvocationType::Event)
-                .payload(Blob::new(body.to_vec()))
-                .send()
-                .await
-            {
-                tracing::error!("[WORKER FUNCTION ERROR] {:?}", err);
+            if !cfg!(debug_assertions) {
+                // in release, invoke worker lambda
+                let function = state.env.worker_function_name;
+                let lambda = state.sdk_lambda_client.invoke();
+                if let Err(err) = lambda
+                    .function_name(function)
+                    .invocation_type(InvocationType::Event)
+                    .payload(Blob::new(body.to_vec()))
+                    .send()
+                    .await
+                {
+                    tracing::error!("[WORKER FUNCTION ERROR] {:?}", err);
+                    return Ok(Json(InteractionResponse {
+                        response_type: 4,
+                        data: Some(InteractionResponseData {
+                            content: "Something went wrong, try again.".to_string(),
+                            flags,
+                        }),
+                    })
+                    .into_response());
+                }
+            } else {
+                // locally, spawn task
+                tokio::spawn(async move {
+                    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+                    if let Err(err) = interaction.handle_slash_command(state.request_client).await {
+                        tracing::error!(
+                            "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
+                            interaction.data.name,
+                            interaction.member.user.id,
+                            err
+                        );
+                    }
+                });
             }
 
             InteractionResponse {
                 response_type: 5, // defer
                 data: Some(InteractionResponseData {
-                    flags: Some(1 << 6), // 64 ephemeral message
+                    flags,
                     ..Default::default()
                 }),
             }
@@ -52,7 +65,7 @@ pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> A
         InteractionType::Unhandled(_) => InteractionResponse {
             data: Some(InteractionResponseData {
                 content: "Unsupported interaction".to_string(),
-                ..Default::default()
+                flags,
             }),
             ..Default::default()
         },

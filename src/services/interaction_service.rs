@@ -42,6 +42,7 @@ impl Interaction {
     ) -> Result<(), AppError> {
         let content = match self.data.name.as_str() {
             "ping" => Self::ping(),
+            "help" => Self::help(),
             "beer-down" => self.beer_down().await?,
             "beer-count" => self.beer_count().await?,
             "beer-tab" => self.beer_tab().await?,
@@ -51,12 +52,23 @@ impl Interaction {
         Ok(())
     }
 
+    pub fn build_flags(&self) -> Option<u64> {
+        match self.data.name.as_str() {
+            "help" => None,
+            _ => Some(1 << 6), // 64 ephemeral message
+        }
+    }
+
     fn unhandled() -> String {
         "WIP command".to_string()
     }
 
     fn ping() -> String {
         "pong".to_string()
+    }
+
+    fn help() -> String {
+        "help".to_string()
     }
 
     async fn beer_down(&self) -> Result<String, AppError> {

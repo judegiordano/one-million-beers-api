@@ -1,5 +1,9 @@
 [
     {
+        "name": "help",
+        "description": "List the currently supported commands."
+    },
+    {
         "name": "ping",
         "description": "Responds with 'pong'."
     },
