@@ -13,38 +13,6 @@ pub struct AppState {
     pub sdk_lambda_client: aws_sdk_lambda::Client,
 }
 
-impl AppState {
-    pub async fn new() -> Result<Self, AppError> {
-        let env = Env::load()?;
-        // discord verification key
-        let public_key = match hex::decode(env.discord_public_key.clone()) {
-            Ok(key) => key,
-            Err(err) => return Err(AppError::InternalServerError(err.to_string())),
-        };
-        let public_key_bytes: [u8; 32] = match public_key.try_into() {
-            Ok(bytes) => bytes,
-            Err(_) => {
-                return Err(AppError::InternalServerError(
-                    "unable to parse key into bytes".to_string(),
-                ))
-            }
-        };
-        let verification_key = match VerifyingKey::from_bytes(&public_key_bytes) {
-            Ok(key) => key,
-            Err(err) => return Err(AppError::InternalServerError(err.to_string())),
-        };
-        // lambda sdk
-        let config = aws_config::load_from_env().await;
-
-        Ok(Self {
-            env,
-            verification_key,
-            request_client: reqwest::Client::new(),
-            sdk_lambda_client: aws_sdk_lambda::Client::new(&config),
-        })
-    }
-}
-
 #[derive(Debug, Deserialize, Default)]
 pub struct InteractionChannel {
     pub id: String,
@@ -74,6 +42,8 @@ pub struct InteractionData {
     pub name: String,
     #[serde(rename = "type")]
     pub interaction_type: u64,
+    pub component_type: Option<u64>,
+    pub custom_id: Option<String>,
 }
 
 #[allow(clippy::unsafe_derive_deserialize)]
@@ -91,23 +61,33 @@ pub struct Interaction {
     pub data: InteractionData,
 }
 
+#[derive(Debug, Deserialize, Default)]
+pub struct MessageComponentInteractionData {
+    pub custom_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct MessageComponentInteractionMessage {
+    pub content: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Default)]
+pub struct MessageComponentInteraction {
+    #[serde(rename = "type")]
+    pub interaction_type: u64,
+    pub data: MessageComponentInteractionData,
+    pub member: GuildMember,
+    pub message: MessageComponentInteractionMessage,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
 #[serde(from = "u8")]
 pub enum InteractionType {
     #[default]
     Ping,
     ApplicationCommand,
+    MessageComponent,
     Unhandled(u8),
-}
-
-impl From<u8> for InteractionType {
-    fn from(v: u8) -> Self {
-        match v {
-            1 => Self::Ping,
-            2 => Self::ApplicationCommand,
-            n => Self::Unhandled(n),
-        }
-    }
 }
 
 #[derive(Debug, Serialize, Default)]

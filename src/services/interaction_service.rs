@@ -21,7 +21,24 @@ impl Interaction {
             "https://discord.com/api/v10/webhooks/{application_id}/{token}/messages/@original",
         );
 
-        let body = json!({ "content": content });
+        let components = match self.data.name.command_from_str() {
+            Command::Help | Command::Unhandled => json!([]),
+            _ => json!([{
+                "type": 1,
+                "components": [{
+                    "type": 2,
+                    "style": 2,
+                    "label": "Share to channel",
+                    "custom_id": "share_message"
+                }]
+            }]),
+        };
+
+        let body = json!({
+            "content": content,
+            "components": components
+        });
+        println!("[BODY]: {:?}", body);
 
         let req = request_client.patch(followup_url).json(&body);
         let res = req.send().await?;

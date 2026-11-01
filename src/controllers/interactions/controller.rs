@@ -1,75 +1,24 @@
-use aws_sdk_lambda::{primitives::Blob, types::InvocationType};
 use axum::{body::Bytes, extract::State, response::IntoResponse, Json};
 
-use crate::types::{
-    ApiResponse, AppState, Interaction, InteractionResponse, InteractionResponseData,
-    InteractionType,
+use crate::{
+    errors::AppError,
+    services::interaction_type::InteractionTypeHelper,
+    types::{ApiResponse, AppState},
 };
 
 pub async fn handle_interaction(State(state): State<AppState>, body: Bytes) -> ApiResponse {
-    let interaction: Interaction = serde_json::from_slice(&body).unwrap_or_default();
-    tracing::info!("[INTERACTION] {:?}", interaction);
-    let flags = interaction.build_flags();
+    let raw_interaction: serde_json::Value = serde_json::from_slice(&body).map_err(|err| {
+        tracing::error!("[PARSE ERROR] {err}");
+        AppError::bad_request(err)
+    })?;
+    let interaction_type_str = &raw_interaction["type"];
+    let interaction_type_u8 = interaction_type_str
+        .to_string()
+        .parse::<u8>()
+        .map_err(AppError::bad_request)?;
 
-    let response = match interaction.interaction_type {
-        // type 1 is always discord ping
-        InteractionType::Ping => InteractionResponse {
-            response_type: 1,
-            ..Default::default()
-        },
-        InteractionType::ApplicationCommand => {
-            if cfg!(debug_assertions) {
-                // locally, spawn task
-                tokio::spawn(async move {
-                    tokio::time::sleep(std::time::Duration::from_millis(250)).await;
-                    if let Err(err) = interaction.handle_slash_command(state.request_client).await {
-                        tracing::error!(
-                            "[SLASH COMMAND ERROR]: [COMMAND: {}] [USER: {}]  [ERROR: {:#?}]",
-                            interaction.data.name,
-                            interaction.member.user.id,
-                            err
-                        );
-                    }
-                });
-            } else {
-                // in release, invoke worker lambda
-                let function = state.env.worker_function_name;
-                let lambda = state.sdk_lambda_client.invoke();
-                if let Err(err) = lambda
-                    .function_name(function)
-                    .invocation_type(InvocationType::Event)
-                    .payload(Blob::new(body.to_vec()))
-                    .send()
-                    .await
-                {
-                    tracing::error!("[WORKER FUNCTION ERROR] {:?}", err);
-                    return Ok(Json(InteractionResponse {
-                        response_type: 4,
-                        data: Some(InteractionResponseData {
-                            content: "Something went wrong, try again.".to_string(),
-                            flags,
-                        }),
-                    })
-                    .into_response());
-                }
-            }
-
-            InteractionResponse {
-                response_type: 5, // defer
-                data: Some(InteractionResponseData {
-                    flags,
-                    ..Default::default()
-                }),
-            }
-        }
-        InteractionType::Unhandled(_) => InteractionResponse {
-            data: Some(InteractionResponseData {
-                content: "Unsupported interaction".to_string(),
-                flags,
-            }),
-            ..Default::default()
-        },
-    };
+    let interaction_type = interaction_type_u8.to_interaction_type();
+    let response = interaction_type.build_response(state, body).await?;
 
     if cfg!(debug_assertions) {
         tracing::info!("[RESPONSE] {:#?}", response);
