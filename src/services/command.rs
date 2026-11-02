@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Eq)]
-pub enum Command {
+pub enum SlashCommand {
     Ping,
     Help,
     BeerDown,
@@ -9,9 +9,9 @@ pub enum Command {
     Unhandled,
 }
 
-impl Command {
+impl SlashCommand {
     #[allow(clippy::inherent_to_string)]
-    pub fn to_string(&self) -> String {
+    pub fn name(&self) -> String {
         match self {
             Self::Ping => "ping".to_string(),
             Self::Help => "help".to_string(),
@@ -40,24 +40,23 @@ impl Command {
             Self::BeerDown,
             Self::BeerCount,
             Self::BeerTab,
-            Self::Unhandled,
         ]
     }
 }
 
 pub trait CommandHelper {
-    fn command_from_str(&self) -> Command;
+    fn command_from_str(&self) -> SlashCommand;
 }
 
 impl CommandHelper for String {
-    fn command_from_str(&self) -> Command {
+    fn command_from_str(&self) -> SlashCommand {
         match self.as_str() {
-            "ping" => Command::Ping,
-            "help" => Command::Help,
-            "beer-down" => Command::BeerDown,
-            "beer-count" => Command::BeerCount,
-            "beer-tab" => Command::BeerTab,
-            _ => Command::Unhandled,
+            "ping" => SlashCommand::Ping,
+            "help" => SlashCommand::Help,
+            "beer-down" => SlashCommand::BeerDown,
+            "beer-count" => SlashCommand::BeerCount,
+            "beer-tab" => SlashCommand::BeerTab,
+            _ => SlashCommand::Unhandled,
         }
     }
 }

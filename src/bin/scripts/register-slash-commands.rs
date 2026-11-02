@@ -1,8 +1,8 @@
-use one_million_beers_api::{env::Env, errors::AppError, logger};
+use one_million_beers_api::{env::Env, errors::AppError, logger, services::command::SlashCommand};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize)]
-struct SlashCommand {
+struct SlashCommandPayload {
     pub name: String,
     pub description: String,
 }
@@ -18,15 +18,22 @@ async fn main() -> Result<(), AppError> {
 
     let url = format!("https://discord.com/api/v10/applications/{discord_client_id}/commands");
 
-    let cmd_buffer = std::fs::read("./.data/commands.json").map_err(AppError::not_found)?;
-    let data = serde_json::from_slice(&cmd_buffer).map_err(AppError::internal_server_error)?;
+    let commands = SlashCommand::variants();
+
+    let slash_commands = commands
+        .iter()
+        .map(|cmd| SlashCommandPayload {
+            name: cmd.name(),
+            description: cmd.description(),
+        })
+        .collect::<Vec<_>>();
 
     let client = reqwest::Client::new();
 
     let res = client
         .put(&url)
         .header("Authorization", format!("Bot {discord_token}"))
-        .json::<Vec<SlashCommand>>(&data)
+        .json::<Vec<SlashCommandPayload>>(&slash_commands)
         .send()
         .await
         .map_err(AppError::internal_server_error)?;

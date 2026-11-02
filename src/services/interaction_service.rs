@@ -4,7 +4,7 @@ use tokio::try_join;
 use crate::{
     errors::AppError,
     models::{server::Server, user::User},
-    services::command::{Command, CommandHelper},
+    services::command::{CommandHelper, SlashCommand},
     types::Interaction,
 };
 
@@ -13,6 +13,7 @@ impl Interaction {
         &self,
         request_client: reqwest::Client,
         content: String,
+        command: SlashCommand,
     ) -> Result<(), reqwest::Error> {
         let application_id = &self.application_id;
         let token = &self.token;
@@ -21,8 +22,8 @@ impl Interaction {
             "https://discord.com/api/v10/webhooks/{application_id}/{token}/messages/@original",
         );
 
-        let components = match self.data.name.command_from_str() {
-            Command::Help | Command::Unhandled => json!([]),
+        let components = match command {
+            SlashCommand::Help | SlashCommand::Unhandled => json!([]),
             _ => json!([{
                 "type": 1,
                 "components": [{
@@ -53,25 +54,23 @@ impl Interaction {
         Ok(())
     }
 
-    pub async fn handle_slash_command(
-        &self,
-        request_client: reqwest::Client,
-    ) -> Result<(), AppError> {
-        let content = match self.data.name.command_from_str() {
-            Command::Ping => Self::ping(),
-            Command::Help => Self::help(),
-            Command::BeerDown => self.beer_down().await?,
-            Command::BeerCount => self.beer_count().await?,
-            Command::BeerTab => self.beer_tab().await?,
-            Command::Unhandled => Self::unhandled(),
+    pub async fn handle_slash_command(&self, client: reqwest::Client) -> Result<(), AppError> {
+        let cmd = self.data.name.command_from_str();
+        let content = match cmd {
+            SlashCommand::Ping => Self::ping(),
+            SlashCommand::Help => Self::help(),
+            SlashCommand::BeerDown => self.beer_down().await?,
+            SlashCommand::BeerCount => self.beer_count().await?,
+            SlashCommand::BeerTab => self.beer_tab().await?,
+            SlashCommand::Unhandled => Self::unhandled(),
         };
-        let _ = self.send_followup_message(request_client, content).await;
+        let _ = self.send_followup_message(client, content, cmd).await;
         Ok(())
     }
 
     pub fn build_flags(&self) -> Option<u64> {
         match self.data.name.command_from_str() {
-            Command::Help => None,
+            SlashCommand::Help => None,
             _ => Some(1 << 6), // 64 ephemeral message
         }
     }
@@ -85,12 +84,12 @@ impl Interaction {
     }
 
     fn help() -> String {
-        let commands = Command::variants();
+        let commands = SlashCommand::variants();
         let commands_iter = commands.iter().fold(Vec::new(), |mut acc, cmd| {
-            if *cmd == Command::Unhandled {
+            if *cmd == SlashCommand::Unhandled {
                 return acc;
             }
-            let name = cmd.to_string();
+            let name = cmd.name();
             let description = cmd.description();
             acc.push(format!("`/{name}` - {description}"));
             acc
